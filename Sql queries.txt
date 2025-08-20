@@ -1,0 +1,42 @@
+Use pharma_sales;
+
+
+select * from dailysales;
+
+
+select sum(amount) as Totalsales from dailysales;
+
+select category, sum(amount) as Totalsales 
+from dailysales 
+group by category;
+
+select medicine_name , sum(amount) as Totalsales 
+from dailysales 
+group by medicine_name 
+order by Totalsales desc limit 1;
+
+select date_format(sale_date, '%Y-%m') as month, category, sum(amount) as Totalsales 
+from dailysales 
+group by month, category
+order by month;
+
+with monthly_sales as (
+    select DATE_FORMAT(sale_date, '%Y-%m') as months, category, sum(amount) as Totalsales
+    from dailysales
+    group by months,category )
+    select months , category , Totalsales, 
+    lag(Totalsales) OVER (partition by category ORDER BY months) as prev_month_sales,
+    round((Totalsales - lag(Totalsales)Over(partition by category order by months))/ LAG(Totalsales) over(partition by category order by months)*100,2) as pct_change 
+    from monthly_sales;
+
+select sale_date, category, avg(amount) over(partition by category order by sale_date rows between 6 preceding and current row) as mov_avg
+from dailysales;
+select DATE_FORMAT(sale_date, '%Y-%m')as months,category, avg(amount) as Avg
+from dailysales
+group by months,category;
+
+select YEAR(sale_date) as years, sum(amount) as TotalSales, RANK() over(partition by category ORDER BY year(sale_date) DESC) as ranks
+from dailysales
+GROUP by years,category
+ORDER BY ranks;
+
